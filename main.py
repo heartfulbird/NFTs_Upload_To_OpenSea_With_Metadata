@@ -197,9 +197,12 @@ class Webdriver:
         options.add_argument("--lang=en-US")  # Set webdriver language
         options.add_experimental_option(  # to English. - 2 methods.
             'prefs', {'intl.accept_languages': 'en,en_US'})
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])   
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+#         driver = webdriver.Chrome(service=Service(  # DeprecationWarning using
+#             CDM(log_level=0).install()), options=options)  # executable_path.
+        os.environ['WDM_LOG_LEVEL'] = '0'
         driver = webdriver.Chrome(service=Service(  # DeprecationWarning using
-            CDM(log_level=0).install()), options=options)  # executable_path.
+                    CDM().install()), options=options)  # executable_path.
         driver.maximize_window()  # Maximize window to reach all elements.
         return driver
 
@@ -261,7 +264,7 @@ class Wallets:
         self.password = password  # Get the new/same password.
         self.wallet = wallet.lower().replace(' ', '_')  # Wallet user choice.
         self.fails = 0  # Counter of fails during wallet connection.
-    
+
     def login(self) -> bool:
         """Connect to OpenSea using a specific wallet."""
         return eval(f'self.{self.wallet}_login()')
@@ -499,7 +502,7 @@ class OpenSea:
                 if not isinstance(structure.price, int) and not \
                         isinstance(structure.price, float):
                     raise TE('The price must be an integer or a float.')
-                
+
             if structure.supply > 1:  # Set a quantity of supply.
                 if isinstance(structure.quantity, int):  # Quantity is int.
                     if structure.quantity <= structure.supply:
@@ -638,7 +641,7 @@ def cls() -> None:
 if __name__ == '__main__':
 
     cls()  # Clear console.
-    
+
     wallet = Wallets('MetaMask',  # Send the password / recovery phrase.
         read_file('password', '\nWhat is your MetaMask password? '), read_file(
             'recovery_phrase', '\nWhat is your MetaMask recovery phrase? '))
@@ -658,10 +661,6 @@ if __name__ == '__main__':
                     isinstance(structure.price, float):
                 if structure.price > 0:  # If price has been defined.
                     opensea.sale(nft_number + 1)  # Sell NFT.
-        
 
         #web.driver.quit()  # Stop the webdriver.
-    
     print(f'\n{green}All done! Your NFTs have been uploaded/sold.{reset}')
-    
-   

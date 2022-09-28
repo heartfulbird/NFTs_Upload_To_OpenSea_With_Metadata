@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+assets/chromedriver.exe
+assets/chromedriver
+data/_metadata.json
+data/*.csv
+assets/password.txt
+assets/recovery_phrase.txt
+tmp.txt
+.idea
