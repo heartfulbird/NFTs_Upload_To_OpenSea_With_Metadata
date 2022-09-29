@@ -17,6 +17,7 @@ from webdriver_manager.chrome import ChromeDriverManager as CDM
 from datetime import datetime as dt
 from glob import glob
 import os
+from time import sleep
 
 
 """Colorama module constants."""
@@ -322,15 +323,13 @@ class Wallets:
     def metamask_contract_polygon(self) -> None:
         """Sign a MetaMask contract to login to OpenSea."""
 
-         # Cancel/Approve Polygon network adding HTML
-         # <div class="confirmation-footer__actions">
-         #   <button class="button btn-secondary btn--rounded" role="button" tabindex="0">Cancel</button>
-         #   <button class="button btn-primary btn--rounded"   role="button" tabindex="0">Approve</button>
-         # </div>
+        # "Approve" network adding and "Switch"
+        web.clickable('//*[contains(@class, "button btn-primary")]')
+        web.clickable('//*[contains(@class, "button btn-primary")]')
 
-        # Approve network adding
-        web.clickable('//*[contains(@class, "button btn-primary")]')
-        web.clickable('//*[contains(@class, "button btn-primary")]')
+        # Metamask pop up re-opens
+        sleep(3)
+        web.window_handles(2)
 
         # Scroll to Sign btn
         web.visible('//*[contains(@class, "button btn-primary")]').location_once_scrolled_into_view
@@ -339,16 +338,11 @@ class Wallets:
         web.clickable('//*[contains(@class, "button btn-primary")]')
 
         try:  # Wait until the MetaMask pop up is closed.
-            import pdb; pdb.set_trace() # TODO
             WDW(web.driver, 10).until(EC.number_of_windows_to_be(2))
         except TE:
-            import pdb; pdb.set_trace() # TODO
             self.metamask_contract()  # Sign the contract a second time.
-            import pdb; pdb.set_trace() # TODO
-             # <div class="confirmation-footer__actions">
-             #   <button class="button btn-secondary btn--rounded" role="button" tabindex="0">Cancel</button>
-             #   <button class="button btn-primary btn--rounded"   role="button" tabindex="0">Approve</button>
-             # </div>
+            # OR if the same flow is needed
+            #self.metamask_contract_polygon()
         web.window_handles(1)  # Switch back to the OpenSea tab.
 
 
@@ -526,37 +520,8 @@ class OpenSea:
         print(f'Sale of the NFT {number}')
 
         try:  # Try to sell the NFT with different types and methods.
-#             if 2 in structure.action and 1 not in structure.action:
-#                 web.driver.get(structure.nft_url + '/sell')  # NFT sale page.
-#             else:  # The NFT has just been uploaded.
-#                 web.driver.get(web.driver.current_url + '/sell')  # Sale page.
-#             if not isinstance(structure.supply, int):
-#                 raise TE('The supply number must be an integer.')
-#             elif structure.supply == 1 and structure.blockchain == 'Ethereum':
-#                 if not isinstance(structure.price, int) and not \
-#                         isinstance(structure.price, float):
-#                     raise TE('The price must be an integer or a float.')
-
             web.driver.get(sell_url)  # Sale page.
-
-            # Supply to sell.
-            #web.send_keys('//*[@id="quantity"]', f'{Keys.BACKSPACE}{quantity}')
-
             web.send_keys('//*[@name="price"]', format(price, '.8f'))
-
-
-
-#             if not structure.is_empty(  # Find option and select it.
-#                    '//form/div[5]/div/div[2]/input', '6 months'):
-#                try:  # Try to click on the collection button.
-#                    collection = ('//span[contains(text(), "'
-#                                  f'{structure.collection}")]/../..')
-#                    web.visible(collection)  # Check that the collection span
-#                    web.clickable(collection)  # is visible and click on it.
-#                except Exception:  # If collection doesn't exist.
-#                    raise TE('Collection doesn\'t exist or can\'t be found.')
-
-
             if web.visible('//*[@id="duration"]/div[2]').text \
                     != duration:  # Not default.
                 web.clickable('//*[@id="duration"]')  # Date button.
@@ -582,6 +547,7 @@ class OpenSea:
                          ' to listing of your NFTs.')
             web.window_handles(1)  # Switch back to the OpenSea tab.
             try:  # Wait until the NFT is listed.
+                # TODO: TEST IT WORKS (previous condition might be is waiting for 2 windows but maybe it could be better)
                 web.visible('//header/h4')  # "Your NFT is listed!".
                 print(f'{green}NFT put up for sale.{reset}')
             except Exception:  # An error occured while listing the NFT.
@@ -662,16 +628,11 @@ if __name__ == '__main__':
             'recovery_phrase', '\nWhat is your MetaMask recovery phrase? '))
 
     action = [1]
-
-#     reader = Reader(data_file())  # Ask for a file and read it.
-#     structure = Structure(action)
     web = Webdriver()  # Start a new webdriver and init its methods.
     opensea = OpenSea()  # Init the OpenSea clas.
 
-# TODO:
     wallet.login()  # Connect to MetaMask.
     opensea.login()  # Connect to OpenSea.
-
 
     #### REQUIRED PARAMS
     network = 'Polygon'
@@ -685,13 +646,7 @@ if __name__ == '__main__':
     stop = 2
 
     for nft_number in range(start, stop + 1):
-#         structure.get_data(nft_number)  # Structure the data of the NFT.
-#         upload = None  # Prevent Undefined value error.
-#         upload = opensea.upload(nft_number + 1)  # Upload the NFT.
-
         sell_url = collection_url + f'/{nft_number}/sell'
-
         opensea.sale(nft_number, sell_url, quantity, price, duration, network) # Sell NFT.
-
         #web.driver.quit()  # Stop the webdriver.
     print(f'\n{green}All done! Your NFTs have been uploaded/sold.{reset}')
