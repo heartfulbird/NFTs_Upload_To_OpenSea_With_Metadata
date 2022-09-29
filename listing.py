@@ -312,11 +312,43 @@ class Wallets:
     def metamask_contract(self) -> None:
         """Sign a MetaMask contract to login to OpenSea."""
         # Click on the "Sign" button - Make a contract link.
-        web.clickable('//*[contains(@class, "button btn-secondary")]')
+        web.clickable('//*[contains(@class, "button btn-secondary")]') # TODO: REQUIRED FOR LOGIN BUT CAN NOT WORK FOR SELL with POLYGON SO SEE BELOW NEW METHOD
         try:  # Wait until the MetaMask pop up is closed.
             WDW(web.driver, 10).until(EC.number_of_windows_to_be(2))
         except TE:
             self.metamask_contract()  # Sign the contract a second time.
+        web.window_handles(1)  # Switch back to the OpenSea tab.
+
+    def metamask_contract_polygon(self) -> None:
+        """Sign a MetaMask contract to login to OpenSea."""
+
+         # Cancel/Approve Polygon network adding HTML
+         # <div class="confirmation-footer__actions">
+         #   <button class="button btn-secondary btn--rounded" role="button" tabindex="0">Cancel</button>
+         #   <button class="button btn-primary btn--rounded"   role="button" tabindex="0">Approve</button>
+         # </div>
+
+        # Approve network adding
+        web.clickable('//*[contains(@class, "button btn-primary")]')
+        web.clickable('//*[contains(@class, "button btn-primary")]')
+
+        # Scroll to Sign btn
+        web.visible('//*[contains(@class, "button btn-primary")]').location_once_scrolled_into_view
+
+        # Click on the "Sign" button - Make a contract link.
+        web.clickable('//*[contains(@class, "button btn-primary")]')
+
+        try:  # Wait until the MetaMask pop up is closed.
+            import pdb; pdb.set_trace() # TODO
+            WDW(web.driver, 10).until(EC.number_of_windows_to_be(2))
+        except TE:
+            import pdb; pdb.set_trace() # TODO
+            self.metamask_contract()  # Sign the contract a second time.
+            import pdb; pdb.set_trace() # TODO
+             # <div class="confirmation-footer__actions">
+             #   <button class="button btn-secondary btn--rounded" role="button" tabindex="0">Cancel</button>
+             #   <button class="button btn-primary btn--rounded"   role="button" tabindex="0">Approve</button>
+             # </div>
         web.window_handles(1)  # Switch back to the OpenSea tab.
 
 
@@ -488,9 +520,7 @@ class OpenSea:
             print(f'{red}An error occured.{reset} {error}')
             return False  # If it failed.
 
-    # TODO
-
-    def sale(self, number: int, sell_url, quantity, price, duration, date: str = '%d-%m-%Y %H:%M') -> None:
+    def sale(self, number: int, sell_url, quantity, price, duration, network, date: str = '%d-%m-%Y %H:%M') -> None:
         """Set a price for the NFT and sell it."""
 
         print(f'Sale of the NFT {number}')
@@ -536,21 +566,17 @@ class OpenSea:
                               f'"{duration}")]/../..')
                 web.send_keys('//*[@role="dialog"]', Keys.ENTER)
 
-
-#             import pdb; pdb.set_trace()
-
-            return # TODO
-
             try:  # Click on the "Complete listing" (submit) button.
                 web.clickable('//button[@type="submit"]')
             except Exception:  # An unknown error has occured.
                 raise TE('The submit button cannot be clicked.')
             try:  # Polygon blockchain requires a click on a button.
-                if structure.blockchain == 'Polygon':
-                    web.clickable('//div[@data-testid="Panel"][last()]/div/div'
-                                  '/div/div/button')  # "Sign" button.
-                web.window_handles(2)  # Switch to the MetaMask pop up tab.
-                wallet.contract()  # Sign the contract.
+                if network == 'Polygon':
+                    web.window_handles(2)
+                    wallet.metamask_contract_polygon()
+                else:
+                    web.window_handles(2)  # Switch to the MetaMask pop up tab.
+                    wallet.contract()  # Sign the contract.
             except Exception:  # No deposit or an unknown error occured.
                 raise TE('You need to make a deposit before proceeding'
                          ' to listing of your NFTs.')
@@ -629,7 +655,6 @@ def cls() -> None:
 
 
 if __name__ == '__main__':
-
     cls()  # Clear console.
 
     wallet = Wallets('MetaMask',  # Send the password / recovery phrase.
@@ -649,6 +674,7 @@ if __name__ == '__main__':
 
 
     #### REQUIRED PARAMS
+    network = 'Polygon'
     collection_url = 'https://opensea.io/assets/matic/0x2b62d10e62fe1065537301ff1b24912495ff18ed'
     quantity = 1
     price = 0.005
@@ -665,7 +691,7 @@ if __name__ == '__main__':
 
         sell_url = collection_url + f'/{nft_number}/sell'
 
-        opensea.sale(nft_number, sell_url, quantity, price, duration) # Sell NFT.
+        opensea.sale(nft_number, sell_url, quantity, price, duration, network) # Sell NFT.
 
         #web.driver.quit()  # Stop the webdriver.
     print(f'\n{green}All done! Your NFTs have been uploaded/sold.{reset}')
