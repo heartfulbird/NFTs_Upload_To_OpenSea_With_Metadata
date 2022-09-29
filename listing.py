@@ -488,69 +488,74 @@ class OpenSea:
             print(f'{red}An error occured.{reset} {error}')
             return False  # If it failed.
 
-    def sale(self, number: int, date: str = '%d-%m-%Y %H:%M') -> None:
+    # TODO
+    def sale(self, number: int, sell_url, quantity, price, date: str = '%d-%m-%Y %H:%M') -> None:
         """Set a price for the NFT and sell it."""
-        print(f'Sale of the NFT {number}/{len(structure.file)}.', end=' ')
-        try:  # Try to sell the NFT with different types and methods.
-            if 2 in structure.action and 1 not in structure.action:
-                web.driver.get(structure.nft_url + '/sell')  # NFT sale page.
-            else:  # The NFT has just been uploaded.
-                web.driver.get(web.driver.current_url + '/sell')  # Sale page.
-            if not isinstance(structure.supply, int):
-                raise TE('The supply number must be an integer.')
-            elif structure.supply == 1 and structure.blockchain == 'Ethereum':
-                if not isinstance(structure.price, int) and not \
-                        isinstance(structure.price, float):
-                    raise TE('The price must be an integer or a float.')
 
-            if structure.supply > 1:  # Set a quantity of supply.
-                if isinstance(structure.quantity, int):  # Quantity is int.
-                    if structure.quantity <= structure.supply:
-                        web.send_keys('//*[@id="quantity"]',  # Supply to sell.
-                                      f'{Keys.BACKSPACE}{structure.quantity}')
-                    else:  # Quantity number is higher that supply number.
-                        raise TE('Quantity must be less or equal to supplies.')
-            elif structure.blockchain not in ('Ethereum', 'Polygon'):
-                raise TE('Blockchain is unknown or badly written.')
-            web.send_keys('//*[@name="price"]', format(structure.price, '.8f'))
-            if isinstance(structure.duration, str):  # Transform to a list.
-                structure.duration = [structure.duration]
-            if isinstance(structure.duration, list):  # List of 1 or 2 values.
-                if len(structure.duration) == 2:  # From {date} to {date}.
-                    from datetime import datetime as dt  # Default import.
-                    # Check if duration is less than 6 months.
-                    if (dt.strptime(structure.duration[1], date) -
-                            dt.strptime(structure.duration[0], date
-                                        )).total_seconds() / 60 > 262146:
-                        raise TE('Duration must be less than 6 months.')
-                    # Check if starting date has passed.
-                    if dt.strptime(dt.strftime(dt.now(), date), date) \
-                            > dt.strptime(structure.duration[0], date):
-                        raise TE('Starting date has passed.')
-                    # Split the date and the time.
-                    start_date, start_time = structure.duration[0].split(' ')
-                    end_date, end_time = structure.duration[1].split(' ')
-                    web.clickable('//*[@id="duration"]')  # Date button.
-                    web.visible(  # Scroll to the pop up frame of the date.
-                        '//*[@role="dialog"]').location_once_scrolled_into_view
-                    web.send_date('//*[@role="dialog"]'  # Ending date.
-                                  '/div[2]/div[2]/div/div[2]/input', end_date)
-                    web.send_date('//*[@role="dialog"]/'  # Starting date.
-                                  'div[2]/div[1]/div/div[2]/input', start_date)
-                    web.send_date('//*[@id="end-time"]', end_time)  # End date.
-                    web.send_date('//*[@id="start-time"]',  # Starting date +
-                                  f'{start_time}{Keys.ENTER}')  # close frame.
-                elif len(structure.duration) == 1:  # In {n} days/week/months.
-                    if structure.duration[0] == '':  # Duration not specified.
-                        raise TE('Duration must be specified.')
-                    if web.visible('//*[@id="duration"]/div[2]').text \
-                            != structure.duration[0]:  # Not default.
-                        web.clickable('//*[@id="duration"]')  # Date button.
-                        web.clickable('//*[@role="dialog"]'  # Duration Range
-                                      '/div[1]/div/div[2]/input')  # sheet.
-                        web.clickable('//span[contains(text(), '   # Date span.
-                                      f'"{structure.duration[0]}")]/../..')
-                        web.send_keys('//*[@role="dialog"]', Keys.ENTER)
+        print(f'Sale of the NFT {number}')
+
+        try:  # Try to sell the NFT with different types and methods.
+#             if 2 in structure.action and 1 not in structure.action:
+#                 web.driver.get(structure.nft_url + '/sell')  # NFT sale page.
+#             else:  # The NFT has just been uploaded.
+#                 web.driver.get(web.driver.current_url + '/sell')  # Sale page.
+#             if not isinstance(structure.supply, int):
+#                 raise TE('The supply number must be an integer.')
+#             elif structure.supply == 1 and structure.blockchain == 'Ethereum':
+#                 if not isinstance(structure.price, int) and not \
+#                         isinstance(structure.price, float):
+#                     raise TE('The price must be an integer or a float.')
+
+            web.driver.get(sell_url)  # Sale page.
+
+            import pdb; pdb.set_trace()
+            web.send_keys('//*[@id="quantity"]',  # Supply to sell.
+                          f'{Keys.BACKSPACE}{quantity}')
+
+            web.send_keys('//*[@name="price"]', format(price, '.8f'))
+
+#             if isinstance(structure.duration, list):  # List of 1 or 2 values.
+#                 if len(structure.duration) == 2:  # From {date} to {date}.
+#                     from datetime import datetime as dt  # Default import.
+#                     # Check if duration is less than 6 months.
+#                     if (dt.strptime(structure.duration[1], date) -
+#                             dt.strptime(structure.duration[0], date
+#                                         )).total_seconds() / 60 > 262146:
+#                         raise TE('Duration must be less than 6 months.')
+#                     # Check if starting date has passed.
+#                     if dt.strptime(dt.strftime(dt.now(), date), date) \
+#                             > dt.strptime(structure.duration[0], date):
+#                         raise TE('Starting date has passed.')
+#                     # Split the date and the time.
+#                     start_date, start_time = structure.duration[0].split(' ')
+#                     end_date, end_time = structure.duration[1].split(' ')
+#
+
+#                 web.clickable('//*[@id="duration"]')  # Date button.
+#                 web.visible(  # Scroll to the pop up frame of the date.
+#                     '//*[@role="dialog"]').location_once_scrolled_into_view
+#                 web.send_date('//*[@role="dialog"]'  # Ending date.
+#                               '/div[2]/div[2]/div/div[2]/input', end_date)
+#                 web.send_date('//*[@role="dialog"]/'  # Starting date.
+#                               'div[2]/div[1]/div/div[2]/input', start_date)
+#                 web.send_date('//*[@id="end-time"]', end_time)  # End date.
+#                 web.send_date('//*[@id="start-time"]',  # Starting date +
+#                               f'{start_time}{Keys.ENTER}')  # close frame.
+
+
+#                 elif len(structure.duration) == 1:  # In {n} days/week/months.
+#                     if structure.duration[0] == '':  # Duration not specified.
+#                         raise TE('Duration must be specified.')
+#                     if web.visible('//*[@id="duration"]/div[2]').text \
+#                             != structure.duration[0]:  # Not default.
+#                         web.clickable('//*[@id="duration"]')  # Date button.
+#                         web.clickable('//*[@role="dialog"]'  # Duration Range
+#                                       '/div[1]/div/div[2]/input')  # sheet.
+#                         web.clickable('//span[contains(text(), '   # Date span.
+#                                       f'"{structure.duration[0]}")]/../..')
+#                         web.send_keys('//*[@role="dialog"]', Keys.ENTER)
+#
+
             try:  # Click on the "Complete listing" (submit) button.
                 web.clickable('//button[@type="submit"]')
             except Exception:  # An unknown error has occured.
@@ -645,22 +650,33 @@ if __name__ == '__main__':
     wallet = Wallets('MetaMask',  # Send the password / recovery phrase.
         read_file('password', '\nWhat is your MetaMask password? '), read_file(
             'recovery_phrase', '\nWhat is your MetaMask recovery phrase? '))
+
     action = [1]
     reader = Reader(data_file())  # Ask for a file and read it.
     structure = Structure(action)
     web = Webdriver()  # Start a new webdriver and init its methods.
     opensea = OpenSea()  # Init the OpenSea clas.
-    wallet.login()  # Connect to MetaMask.
-    opensea.login()  # Connect to OpenSea.
 
-    for nft_number in range(reader.lenght_file):
-        structure.get_data(nft_number)  # Structure the data of the NFT.
-        upload = None  # Prevent Undefined value error.
-        upload = opensea.upload(nft_number + 1)  # Upload the NFT.
-        if isinstance(structure.price, int) or \
-                    isinstance(structure.price, float):
-                if structure.price > 0:  # If price has been defined.
-                    opensea.sale(nft_number + 1)  # Sell NFT.
+# TODO:
+#     wallet.login()  # Connect to MetaMask.
+#     opensea.login()  # Connect to OpenSea.
+
+    #### REQUIRED PARAMS
+    collection_url = 'https://opensea.io/assets/matic/0x2b62d10e62fe1065537301ff1b24912495ff18ed'
+    quantity = 1
+    price = 0.005
+
+    start = 1
+    stop = 2
+
+    for nft_number in range(start, stop + 1):
+#         structure.get_data(nft_number)  # Structure the data of the NFT.
+#         upload = None  # Prevent Undefined value error.
+#         upload = opensea.upload(nft_number + 1)  # Upload the NFT.
+
+        sell_url = collection_url + f'/{nft_number}/sell'
+
+        opensea.sale(nft_number, sell_url, quantity, price) # Sell NFT.
 
         #web.driver.quit()  # Stop the webdriver.
     print(f'\n{green}All done! Your NFTs have been uploaded/sold.{reset}')
