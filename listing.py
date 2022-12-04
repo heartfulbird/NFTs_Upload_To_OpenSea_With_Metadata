@@ -752,6 +752,3 @@ if __name__ == '__main__':
 #         opensea.sale(nft_number, sell_url, quantity, price, duration, network) # Sell NFT.
 #         #web.driver.quit()  # Stop the webdriver.
 #     print(f'\n{green}All done! (Check failed in listing_failed.json).{reset}')
-
-
-# test
