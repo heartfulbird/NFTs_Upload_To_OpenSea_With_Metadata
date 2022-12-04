@@ -135,3 +135,5 @@ assets/password.txt
 assets/recovery_phrase.txt
 tmp.txt
 .idea
+
+listing_failed.json

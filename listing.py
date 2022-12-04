@@ -1,3 +1,5 @@
+import json
+
 # Colorama module: pip install colorama
 from colorama import init, Fore, Style
 
@@ -19,6 +21,7 @@ from glob import glob
 import os
 from time import sleep
 
+from os.path import exists
 
 """Colorama module constants."""
 # This module may not work under MacOS.
@@ -313,6 +316,7 @@ class Wallets:
     def metamask_contract(self) -> None:
         """Sign a MetaMask contract to login to OpenSea."""
         # Click on the "Sign" button - Make a contract link.
+        # TODO: check
         web.clickable('//*[contains(@class, "button btn-secondary")]') # TODO: REQUIRED FOR LOGIN BUT CAN NOT WORK FOR SELL with POLYGON SO SEE BELOW NEW METHOD
         try:  # Wait until the MetaMask pop up is closed.
             WDW(web.driver, 10).until(EC.number_of_windows_to_be(2))
@@ -323,26 +327,44 @@ class Wallets:
     def metamask_contract_polygon(self) -> None:
         """Sign a MetaMask contract to login to OpenSea."""
 
-        # "Approve" network adding and "Switch"
-        web.clickable('//*[contains(@class, "button btn-primary")]')
-        web.clickable('//*[contains(@class, "button btn-primary")]')
+        #import pdb; pdb.set_trace()
 
         # Metamask pop up re-opens
         sleep(3)
         web.window_handles(2)
-
-        # Scroll to Sign btn
+        # Scroll to btn
         web.visible('//*[contains(@class, "button btn-primary")]').location_once_scrolled_into_view
-
-        # Click on the "Sign" button - Make a contract link.
+        # "Approve" network
         web.clickable('//*[contains(@class, "button btn-primary")]')
 
+#         sleep(1)
+#
+#         # Do "Switch"
+#         web.clickable('//*[contains(@class, "button btn-primary")]')
+#
+#         # Metamask pop up re-opens
+#         sleep(3)
+#         web.window_handles(2)
+#
+#         # Scroll to Sign btn
+#         web.visible('//*[contains(@class, "button btn-primary")]').location_once_scrolled_into_view
+#
+#         sleep(1)
+#         # Click on the "Sign" button - Make a contract link.
+#         web.clickable('//*[contains(@class, "button btn-primary")]')
+
         try:  # Wait until the MetaMask pop up is closed.
-            WDW(web.driver, 10).until(EC.number_of_windows_to_be(2))
+            # TODO: MAKE LONGER IF TOO FAST
+            # TODO: MAKE LONGER IF TOO FAST
+            # TODO: MAKE LONGER IF TOO FAST
+            # HACK to sign again and again until all signed
+            WDW(web.driver, 3).until(EC.number_of_windows_to_be(2))
         except TE:
-            self.metamask_contract()  # Sign the contract a second time.
-            # OR if the same flow is needed
-            #self.metamask_contract_polygon()
+            #self.metamask_contract()  # Sign the contract a second time.
+            # OR just repeat until sign is needed
+            # but do it ONLY if error caught (popup is not closed - not finally signed)
+            # otherwise it will SUccesfully pss sign step WITHUO making redundant attempt to sign again so it doestn fail if all good already (signed)
+            self.metamask_contract_polygon()
         web.window_handles(1)  # Switch back to the OpenSea tab.
 
 
@@ -365,19 +387,48 @@ class OpenSea:
             web.clickable('//button[contains(@class, "show-more")]')
             # Click on the "MetaMask" button in list of wallets.
             web.clickable('//*[contains(text(), "MetaMask")]/../..')
+
+            sleep(1)
             web.window_handles(2)  # Switch to the MetaMask pop up tab.
+
+            sleep(1)
             # Click on the "Next" button.
             web.clickable('//*[@class="button btn-primary"]')
+
+            sleep(1)
             # Click on the "Connect" button.
             web.clickable('//*[contains(@class, "button btn-primary")]')
+
+            #WDW(web.driver, 5).until(EC.number_of_windows_to_be(1))
+            #WDW(web.driver, 5).until(EC.number_of_windows_to_be(2))
+
+            # It can be enough to login actually
+            # but can be different if it is used in different cases
+            # (not just login but listing with contract signing)
+
+            # had to add focus to 1 window again and click meta wallet again - (hm, not always though)
+
+            #web.window_handles(1)
+            #web.clickable('//*[contains(text(), "MetaMask")]/../..')
+
+            sleep(3)
+            #import pdb; pdb.set_trace()
             web.window_handles(2)  # Switch to the MetaMask pop up tab.
             wallet.contract()  # Sign the contract.
+
             # Check if the login worked.
             WDW(web.driver, 15).until(EC.url_to_be(self.create_url))
             print(f'{green}Logged to OpenSea.{reset}\n')
         except Exception:  # The contract failed.
             try:
                 web.window_handles(1)  # Switch back to the OpenSea tab.
+
+                sleep(1)
+
+                # likely also needed
+                web.clickable('//*[contains(text(), "MetaMask")]/../..')
+
+                sleep(1)
                 web.window_handles(2)  # Switch to the MetaMask pop up tab.
                 wallet.contract()  # Sign the contract.
                 # Check if the login worked.
@@ -521,6 +572,9 @@ class OpenSea:
 
         try:  # Try to sell the NFT with different types and methods.
             web.driver.get(sell_url)  # Sale page.
+
+            #import pdb; pdb.set_trace()
+
             web.send_keys('//*[@name="price"]', format(price, '.8f'))
             if web.visible('//*[@id="duration"]/div[2]').text \
                     != duration:  # Not default.
@@ -531,8 +585,13 @@ class OpenSea:
                               f'"{duration}")]/../..')
                 web.send_keys('//*[@role="dialog"]', Keys.ENTER)
 
+            sleep(2)
+            #import pdb; pdb.set_trace()
+            # WDW(web.driver, 3).until(EC.number_of_windows_to_be(2))
+
             try:  # Click on the "Complete listing" (submit) button.
                 web.clickable('//button[@type="submit"]')
+                #sleep(2)
             except Exception:  # An unknown error has occured.
                 raise TE('The submit button cannot be clicked.')
             try:  # Polygon blockchain requires a click on a button.
@@ -543,7 +602,8 @@ class OpenSea:
                     web.window_handles(2)  # Switch to the MetaMask pop up tab.
                     wallet.contract()  # Sign the contract.
             except Exception:  # No deposit or an unknown error occured.
-                raise TE('You need to make a deposit before proceeding'
+                log_failed_listing(number)
+                raise TE('You (MAYBE) need to make a deposit before proceeding'
                          ' to listing of your NFTs.')
             web.window_handles(1)  # Switch back to the OpenSea tab.
             try:  # Wait until the NFT is listed.
@@ -553,6 +613,8 @@ class OpenSea:
             except Exception:  # An error occured while listing the NFT.
                 raise TE('The NFT is not listed.')
         except Exception as error:  # Failed, an error has occured.
+            # Add json or something with failed id
+            log_failed_listing(number)
             print(f'{red}NFT sale cancelled.{reset} {error}')
 
 
@@ -619,9 +681,34 @@ def cls() -> None:
     # Clear console for Windows using 'cls' and Linux & Mac using 'clear'.
     os.system('cls' if os.name == 'nt' else 'clear')
 
+# Test logging failes/useful info
+def log_failed_listing(id: int) -> None:
+    file_name = 'listing_failed.json'
+    json_object = {}
+
+    if exists(file_name):
+        with open(file_name, 'r') as openfile:
+            # Reading from json file
+            json_object = json.load(openfile)
+
+    #print(json_object)
+
+    # Modify
+    if str(id) not in json_object:
+        json_object[id] = 'failed'
+
+    json_dump = json.dumps(json_object, indent=2)
+
+    # Writing json
+    with open(file_name, "w") as outfile:
+        outfile.write(json_dump)
+
 
 if __name__ == '__main__':
     cls()  # Clear console.
+
+    # Test logging failes/useful info
+    # log_failed_listing(3)
 
     wallet = Wallets('MetaMask',  # Send the password / recovery phrase.
         read_file('password', '\nWhat is your MetaMask password? '), read_file(
@@ -629,24 +716,39 @@ if __name__ == '__main__':
 
     action = [1]
     web = Webdriver()  # Start a new webdriver and init its methods.
-    opensea = OpenSea()  # Init the OpenSea clas.
+    opensea = OpenSea()  # Init the OpenSea class.
 
     wallet.login()  # Connect to MetaMask.
     opensea.login()  # Connect to OpenSea.
 
     #### REQUIRED PARAMS
     network = 'Polygon'
-    collection_url = 'https://opensea.io/assets/matic/0x2b62d10e62fe1065537301ff1b24912495ff18ed'
+    # Test collection
+    #collection_url = 'https://opensea.io/assets/matic/0x2b62d10e62fe1065537301ff1b24912495ff18ed'
+    # Real collection
+    collection_url = 'https://opensea.io/assets/matic/0x844e78ffc63447087c5d7cde41fddf4b54f6b2d7'
     quantity = 1
-    price = 0.005
+    price = 0.01
     duration = '6 months'
 
     # SAVE LISTED SOMEWHERE
-    start = 2
-    stop = 2
+    start = 21
+    stop = 30
+
+#     start_stop = 9
+#     start = start_stop
+#     stop = start_stop
 
     for nft_number in range(start, stop + 1):
         sell_url = collection_url + f'/{nft_number}/sell'
         opensea.sale(nft_number, sell_url, quantity, price, duration, network) # Sell NFT.
         #web.driver.quit()  # Stop the webdriver.
-    print(f'\n{green}All done! Your NFTs have been uploaded/sold.{reset}')
+    print(f'\n{green}All done! (Check failed in listing_failed.json).{reset}')
+
+    # Failed flow - COPY FROM listing_failed.json and CLEAN listing_failed.json before starting (to see if failed again)
+#     failed = [19, 20]
+#     for nft_number in failed:
+#         sell_url = collection_url + f'/{nft_number}/sell'
+#         opensea.sale(nft_number, sell_url, quantity, price, duration, network) # Sell NFT.
+#         #web.driver.quit()  # Stop the webdriver.
+#     print(f'\n{green}All done! (Check failed in listing_failed.json).{reset}')
