@@ -731,9 +731,11 @@ if __name__ == '__main__':
     price = 0.01
     duration = '6 months'
 
+
+
     # SAVE LISTED SOMEWHERE
-    start = 21
-    stop = 30
+    start = 1
+    stop = 1
 
 #     start_stop = 9
 #     start = start_stop
@@ -745,10 +747,14 @@ if __name__ == '__main__':
         #web.driver.quit()  # Stop the webdriver.
     print(f'\n{green}All done! (Check failed in listing_failed.json).{reset}')
 
-    # Failed flow - COPY FROM listing_failed.json and CLEAN listing_failed.json before starting (to see if failed again)
-#     failed = [19, 20]
+
+
+
+#     # Failed flow - COPY FROM listing_failed.json and CLEAN listing_failed.json before starting (to see if failed again)
+#     failed = [793]
+#
 #     for nft_number in failed:
 #         sell_url = collection_url + f'/{nft_number}/sell'
 #         opensea.sale(nft_number, sell_url, quantity, price, duration, network) # Sell NFT.
-#         #web.driver.quit()  # Stop the webdriver.
+#        #web.driver.quit()  # Stop the webdriver.
 #     print(f'\n{green}All done! (Check failed in listing_failed.json).{reset}')
